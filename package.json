@@ -2,6 +2,11 @@
   "name": "csit321-g3-g4-3gigabytes",
   "private": true,
   "scripts": {
-    "dev": "npm --prefix frontend run dev --"
+    "dev": "concurrently --kill-others --names backend,frontend \"npm:dev:backend\" \"npm:dev:frontend\"",
+    "dev:backend": "cd backend && mvnw spring-boot:run",
+    "dev:frontend": "npm --prefix frontend run dev --"
+  },
+  "devDependencies": {
+    "concurrently": "^10.0.7"
   }
 }
