@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { api } from './api.js'
 
 // One reusable Create / Read / Update / Delete screen, driven by a field list.
@@ -9,8 +9,33 @@ export default function CrudPanel({ title, path, fields, hint }) {
   const [editingId, setEditingId] = useState(null)
   const [error, setError] = useState('')
 
-  const load = () => api.list(path).then(setRows).catch((e) => setError(e.message))
-  useEffect(() => { setForm(empty); setEditingId(null); setError(''); load() }, [path])
+  const fetchRows = useCallback(async () => {
+    const data = await api.list(path)
+    if (!Array.isArray(data)) throw new Error('The server returned an invalid list response.')
+    return data
+  }, [path])
+
+  const load = useCallback(async () => {
+    try {
+      setRows(await fetchRows())
+      setError('')
+    } catch (e) {
+      setError(e.message)
+    }
+  }, [fetchRows])
+
+  useEffect(() => {
+    let cancelled = false
+    fetchRows().then((data) => {
+      if (!cancelled) {
+        setRows(data)
+        setError('')
+      }
+    }).catch((e) => {
+      if (!cancelled) setError(e.message)
+    })
+    return () => { cancelled = true }
+  }, [fetchRows])
 
   const change = (name, value) => setForm((f) => ({ ...f, [name]: value }))
 
@@ -30,7 +55,7 @@ export default function CrudPanel({ title, path, fields, hint }) {
     try {
       if (editingId) await api.update(path, editingId, toPayload())
       else await api.create(path, toPayload())
-      setForm(empty); setEditingId(null); load()
+      setForm(empty); setEditingId(null); await load()
     } catch (err) { setError(err.message) }
   }
 

@@ -1,0 +1,7 @@
+{
+  "name": "csit321-g3-g4-3gigabytes",
+  "private": true,
+  "scripts": {
+    "dev": "npm --prefix frontend run dev --"
+  }
+}

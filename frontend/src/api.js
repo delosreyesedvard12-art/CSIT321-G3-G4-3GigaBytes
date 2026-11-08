@@ -7,7 +7,11 @@ async function request(method, url, body) {
   })
   if (res.status === 204) return null
   let data = null
-  try { data = await res.json() } catch { /* empty body */ }
+  try {
+    data = await res.json()
+  } catch {
+    if (res.ok) throw new Error('The server returned an invalid JSON response.')
+  }
   if (!res.ok) {
     const details = Array.isArray(data?.errors)
       ? data.errors.map((e) => `${e.field}: ${e.defaultMessage}`).join(', ')
